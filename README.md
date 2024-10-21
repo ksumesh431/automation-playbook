@@ -4,7 +4,7 @@ Welcome to the Ansible Automation repository!
 
 ## Overview
 
-This repository contains Ansible playbooks and scripts developed to automate various tasks in both development (dev) and production (prod) environments across 120 AWS accounts. These tasks include setting up credentials, mounting Elastic File System (EFS) volumes, mounting S3 buckets as Network File Systems (NFS), and configuring CRON jobs to move logs from EFS to S3.
+This repository contains Ansible playbooks and scripts developed to automate various tasks in both development (dev) and production (prod) environments across 400+ AWS accounts. These tasks include setting up credentials, mounting Elastic File System (EFS) volumes, mounting S3 buckets as Network File Systems (NFS), and configuring CRON jobs.
 
 ## Features
 
