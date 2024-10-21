@@ -6,7 +6,6 @@
    env: pd
    regions:
       - us-east-2
-        # stack_name: ecs-austtx-erp-pd
    parameter_name: EFS
   tasks:
     - name: Extract hostname
@@ -29,7 +28,6 @@
       debug:
         var: bucket_name
 
-
     - name: Check if directory exists
       stat:
         path: ~/.aws
@@ -41,33 +39,27 @@
         state: directory
       when: not aws_dir.stat.exists
 
-
     - name: COPY AWS CONFIG file
       copy:
         src: ~/.aws/config
         dest: ~/.aws/config
 
-
     - name: Run command and capture output
       shell: aws sts get-caller-identity
       register: command_output
 
-
     - name: Print command output
       debug:
         var: command_output.stdout
-
-
 
     - name: Initialize parameter value variable
       set_fact:
         parameter_value: ""
 
     - name: Search for parameter value in {{ item }} region
-      shell:  aws cloudformation describe-stacks --stack-name ecs-austtx-erp-pd --region us-east-2 --query 'Stacks[0].Parameters[?ParameterKey==`EFS`].ParameterValue'
+      shell:  aws cloudformation describe-stacks --stack-name demo-stack-name --region us-east-2 --query 'Stacks[0].Parameters[?ParameterKey==`EFS`].ParameterValue'
       register: stack_info
       ignore_errors: yes
-      #loop: "{{ regions }}"
 
     - name: Access the output of the command
       set_fact:
@@ -80,31 +72,18 @@
 
     - name: Check if directory exists
       stat:
-        path: /opt/teams/share
+        path: /opt/share
       register: directory_check
 
     - name: Create directory if it doesn't exist
       file:
-        path: /opt/teams/share
+        path: /opt/share
         state: directory
       when: not directory_check.stat.exists
 
-      #- name: Mount the EFS file system
-      #shell: mount -t efs -o tls {{ extracted_efs}}:/ /opt/teams/share
-
-
-      #- name: Check if amazon-efs-utils is installed
-      #become: yes
-      # ansible.builtin.apt:
-      # name: amazon-efs-utils
-      # state: present
-      #register: efs_utils_installed
-      #ignore_errors: yes
-
-
     - name: copy efs utils script file
       copy:
-       src:  /home/proot/ansible/efs_log_rotation_scripts/install_efs_util.sh
+       src:  /home/ansible/efs_log_rotation_scripts/install_efs_util.sh
        dest: /tmp/
       when: ansible_facts['distribution'] == 'Ubuntu' or ansible_facts['distribution'] == 'Debian'
 
@@ -127,7 +106,7 @@
 
     - name: Mount the EFS file system
       mount:
-        path: /opt/teams/share
+        path: /opt/share
         src: "{{ extracted_efs[0] }}"  # Replace with your EFS DNS name
         fstype: efs
         opts: tls
@@ -136,7 +115,7 @@
 
     - name: copy s3 script file
       copy:
-       src:  /home/proot/ansible/efs_log_rotation_scripts/s3_script.sh
+       src:  /home/ansible/efs_log_rotation_scripts/s3_script.sh
        dest: /tmp/
 
     - name: Set execute permission for the script file
@@ -191,6 +170,6 @@
       copy:
         content: |
           #!/bin/bash
-          find /opt/teams/share/pd/logs -maxdepth 1 -mtime +90 -exec mv {} /{{ bucket_name }}/{{ bucket_name }}/ \;
+          find /opt/share/logs -maxdepth 1 -mtime +90 -exec mv {} /{{ bucket_name }}/{{ bucket_name }}/ \;
         dest: /automation/scripts/efs_to_s3.sh
         mode: 0755  # Make the script executable
